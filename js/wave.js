@@ -5,6 +5,13 @@
 
 (function ($) {
     var flip_directions = ["flipped-x", "flipped-y"];
+    var is_auto = false;
+    var current_animation = 0;
+    var x = 0;
+    var y = 0;
+    var animation_end_callback = function () {
+        console.log("Animation completed [default]");
+    };
     var WaveAnimationWaterDrop = function () {
         var flip_direction = flip_directions[1];
         var water_drop_wave = function (colElements) {
@@ -39,10 +46,16 @@
                             }
                         }
                     });
-                    if (validNextElements.length == 0) {
+                    if (validNextElements.length == 0 && is_auto) {
                         validNextElements.push(get_first_item_of_first_row());
                     }
-                    water_drop_wave(validNextElements);
+                    if (validNextElements.length > 0) {
+                        water_drop_wave(validNextElements);
+                    } else {
+                        if (animation_end_callback != undefined) {
+                            animation_end_callback();
+                        }
+                    }
                 });
             } else {
                 throw Error("ColElements must contain atleast one item.");
@@ -113,8 +126,15 @@
             if (nextItem == null) {
                 nextItem = get_first_element_of_next_col(colElement);
             }
+
             colElement.find(".wave-element").toggleClass(flip_direction).delay(100).promise().done(function () {
-                col_by_col_wave(nextItem);
+                if (nextItem != null) {
+                    col_by_col_wave(nextItem);
+                } else {
+                    if (animation_end_callback != undefined) {
+                        animation_end_callback();
+                    }
+                }
             });
         };
 
@@ -138,8 +158,11 @@
                 return elem;
             }
             else {
-                elem = get_first_item_of_first_row();
-                return elem;
+                if (is_auto) {
+                    elem = get_first_item_of_first_row();
+                    return elem;
+                }
+                return null;
             }
         };
         var get_nth_item_of_first_row = function (nth) {
@@ -158,9 +181,15 @@
                 nextCol = get_first_item_of_next_line(colElement);
             }
             colElement.find(".wave-element").toggleClass(flip_direction).delay(50).promise().done(function () {
-                line_by_line_wave(nextCol);
+                if (nextCol != null) {
+                    line_by_line_wave(nextCol);
+                } else {
+                    if (animation_end_callback != undefined) {
+                        animation_end_callback();
+                    }
+                }
             });
-        }
+        };
 
         var get_next_wave_item = function (elem) {
             var next_obj = $(elem).next();
@@ -168,7 +197,7 @@
                 return next_obj;
             }
             return null;
-        }
+        };
 
         var get_first_item_of_next_line = function (colElement) {
             if (colElement.hasClass('col')) {
@@ -181,12 +210,17 @@
                             return firstItemOfNextRow;
                         }
                     } else {
-                        return get_first_item_of_first_row();
+                        if (is_auto) {
+                            return get_first_item_of_first_row();
+                        } else {
+                            return null;
+                        }
+
                     }
                 }
             }
             throw Error("Error");
-        }
+        };
 
         var get_first_item_of_first_row = function () {
             return $(".wave-container .row:first .col:first");
@@ -195,8 +229,12 @@
         line_by_line_wave(firstCol);
     };
 
-    var WaveTransitionInit = function (wave_type, x, y) {
+    var WaveTransitionInit = function (wave_type, _x, _y, isAuto) {
         var containerElement = $(".wave-container");
+        is_auto = isAuto;
+        x = _x;
+        y = _y;
+        current_animation = wave_type;
         if (containerElement.size() == 0) {
             throw new Error("Can't find .wave-container in DOM!");
         }
@@ -204,12 +242,15 @@
             $(containerElement).append("<div class='row'></div>");
             var $row = $(containerElement).find(".row:last-child");
             for (var j = 0; j < y; j++) {
-                var color = get_random_hex_code();
+                //var color = get_random_hex_code();
                 $row.append("<div class='col' id='" + ((i * y) + (j)) + "'><div class='wave-element'>" +
                     "<figure class='front'></figure>" +
                     "<figure class='back'></figure>" +
                     "</div></div>");
             }
+        }
+        if (!is_auto) {
+            return;
         }
         switch (wave_type) {
             default:
@@ -225,7 +266,23 @@
         }
     };
 
+    var FireCurrentTransition = function (end_callback) {
+        animation_end_callback = end_callback;
+        switch (current_animation) {
+            default:
+            case 0:
+                WaveAnimationLineByLine();
+                break;
+            case 1:
+                WaveAnimationColByCol();
+                break;
+            case 2:
+                WaveAnimationWaterDrop();
+                break;
+        }
+    };
     $.fn.extend({
         WaveTransition: WaveTransitionInit,
+        WaveTransitionFire: FireCurrentTransition
     });
 })(jQuery);
