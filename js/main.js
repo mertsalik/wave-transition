@@ -9,31 +9,11 @@ var images = [];
 var last_image_id = null;
 function start() {
     var row_count = 5;
-    var col_count = 7;
+    var col_count = 6;
     load_images(row_count * col_count);
-    // console.log(images);
-    $().WaveTransition(0, row_count, col_count, false);
+    $().WaveTransition(1, row_count, col_count, false);
     write_images();
     loop();
-    /*
-     setTimeout(function () {
-     swipe_images_right(function () {
-     fire();
-     });
-     }, 3000);
-     */
-    /*
-     setTimeout(function () {
-     $(".wave-element").each(function (i, el) {
-     var image = images[i];
-     $(this).find(".front").append("<img src='" + image.url + "' />");
-     $(this).find(".back").append("<img src='" + image.url + "' />");
-     });
-     setTimeout(function () {
-     fire();
-     }, 2000);
-     }, 1000);
-     */
 }
 
 function loop() {
@@ -74,6 +54,9 @@ function download_image(url, callback) {
     var $downloadingImage = $("<img id='temp'>");
     $downloadingImage.load(function () {
         callback();
+    });
+    $downloadingImage.bind('error', function () {
+        alert('image did not load');
     });
     $downloadingImage.attr("src", url);
 }
