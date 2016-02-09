@@ -252,31 +252,28 @@
         if (!is_auto) {
             return;
         }
-        switch (wave_type) {
-            default:
-            case 0:
-                WaveAnimationLineByLine();
-                break;
-            case 1:
-                WaveAnimationColByCol();
-                break;
-            case 2:
-                WaveAnimationWaterDrop();
-                break;
-        }
+        FireCurrentTransition();
     };
 
     var FireCurrentTransition = function (end_callback) {
-        animation_end_callback = end_callback;
+        if (end_callback != undefined) {
+            animation_end_callback = end_callback;
+        }
+        $(".wave-container").removeClass('horizontal-wave-effect');
+        $(".wave-container").removeClass('vertical-wave-effect');
+        $(".wave-container").removeClass('waterdrop-wave-effect');
         switch (current_animation) {
             default:
             case 0:
+                $(".wave-container").addClass('horizontal-wave-effect');
                 WaveAnimationLineByLine();
                 break;
             case 1:
+                $(".wave-container").addClass('vertical-wave-effect');
                 WaveAnimationColByCol();
                 break;
             case 2:
+                $(".wave-container").addClass('waterdrop-wave-effect');
                 WaveAnimationWaterDrop();
                 break;
         }
