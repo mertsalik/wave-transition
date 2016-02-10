@@ -1,0 +1,78 @@
+
+.wave-container {
+    -webkit-perspective: 800px;
+    -mox-perspective: 800px;
+    -o-perspective: 800px;
+    perspective: 800px;
+}
+
+.wave-container .wave-row .wave-col {
+    /*width: 200px;
+    height: 200px;*/
+    display: inline-block;
+}
+
+.wave-element {
+    -webkit-transition: -webkit-transform 0s;
+    /*-moz-transition: -moz-transform 1s;
+    -o-transition: -o-transform 1s;
+    transition: transform 1s;*/
+
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+
+    /*height: 200px;*/
+}
+
+.wave-element.flipped-y {
+    -webkit-transition: -webkit-transform 0.8s;
+    -webkit-transform: rotateY(180deg);
+    -moz-transform: rotateY(180deg);
+    -o-transform: rotateY(180deg);
+    transform: rotateY(180deg);
+}
+
+.wave-element.flipped-x {
+    -webkit-transition: -webkit-transform 0.8s;
+    -webkit-transform: rotateX(-180deg);
+    -moz-transform: rotateX(-180deg);
+    -o-transform: rotateX(-180deg);
+    transform: rotateX(-180deg);
+}
+
+.wave-element figure {
+    display: block;
+    height: 100%;
+    width: 100%;
+    color: white;
+    text-align: center;
+    position: absolute;
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -o-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.wave-element .front {
+    /*background-color: red;*/
+}
+
+.wave-container.horizontal-wave-effect .wave-element .back,
+.wave-container.waterdrop-wave-effect .wave-element .back {
+    /*background: blue;*/
+    -webkit-transform: rotateY(180deg);
+    -moz-transform: rotateY(180deg);
+    -o-transform: rotateY(180deg);
+    transform: rotateY(180deg);
+}
+
+.wave-container.vertical-wave-effect .wave-element .back {
+    /*background: blue;*/
+    -webkit-transform: rotateX(180deg);
+    -moz-transform: rotateX(180deg);
+    -o-transform: rotateX(180deg);
+    transform: rotateX(180deg);
+}
+
