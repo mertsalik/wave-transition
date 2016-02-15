@@ -56,7 +56,7 @@ function download_image(url, callback) {
         callback();
     });
     $downloadingImage.bind('error', function () {
-        alert('image did not load');
+        //alert('image did not load');
     });
     $downloadingImage.attr("src", url);
 }

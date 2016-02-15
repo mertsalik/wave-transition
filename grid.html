@@ -5,10 +5,11 @@
     <title></title>
     <link href="css/reset.css" rel="stylesheet" type="text/css"/>
     <link href="css/grid.css" rel="stylesheet" type="text/css"/>
+
 </head>
 <body>
 
-<div class="container">
+<div class="container horizontal-wave-effect">
 
 </div>
 <script type="text/javascript" src="js/jquery/jquery-1.12.0.min.js"></script>
@@ -16,9 +17,15 @@
 <script type="text/javascript" src="js/main.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
-        var grid = $().MakeGrid(".container", 5, 5, [2, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22]);
-        grid.createDOMObjects();
-        $().ReloadGrid()
+        var grid = $().MakeGrid(".container", 5, 5, "vertical", [2, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22]);
+
+        function fire() {
+            $().AddNewImage(undefined, function () {
+                fire()
+            });
+        }
+        fire();
+
     });
 </script>
 </body>

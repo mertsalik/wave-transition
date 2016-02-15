@@ -38,7 +38,10 @@
         };
         this.get_Back_img = function () {
             return this.get_DOM_element().find(".back img");
-        }
+        };
+        this.get_Animation_element = function () {
+            return this.get_DOM_element().find(".wave-element");
+        };
     };
     /**
      * For quick count response
@@ -134,7 +137,7 @@
             }
             return result;
         },
-        createDOMObjects: function () {
+        createDOMObjects: function (image_objects) {
             for (var i = 0; i < this.x; i++) {
                 this.jElement.append("<div class='" + grid_row_class_name + "'></div>");
                 var $row = this.jElement.find("." + grid_row_class_name + ":last-child");
@@ -170,8 +173,8 @@
             + "max-width:" + cell_size * Grid.y + "px;}" +
             "div." + grid_column_class_name + "{"
             + "width:" + cell_size + "px; height:" + cell_size + "px; }"
-            + "div." + grid_row_class_name + "{line-height:0;margin-left:auto;margin-right: auto;}" +
-            "</style>")
+            + "div." + grid_row_class_name + "{line-height:0;margin-left:auto;margin-right: auto;}"
+            + "</style>");
     };
     var init = function (jSelector, x, y) {
         if (jSelector == undefined)
@@ -217,18 +220,39 @@
     var DOMHelper = function () {
         var images = [];
         var last_image_id = null;
+        var flip_class = "flipped-x";
+        var animationType = null;
         this.getCurrentGrid = function () {
             if (Grid.jElement == null)
                 return null;
             else
                 return Grid;
         };
-        this.loadImages = function () {
-            for (var i = 0; i < grids_available_cell_ids.length; i++) {
-                images.push({
-                    "id": i.toString(),
-                    "url": "https://unsplash.it/" + cell_size + "?image=" + i.toString()
-                });
+        this.setAnimation = function (animType) {
+            if (animType == "horizontal") {
+                flip_class = "flipped-y";
+                $(".wave-container").removeClass("vertical-wave-effect").addClass("horizontal-wave-effect");
+            } else {
+                flip_class = "flipped-x";
+                $(".wave-container").removeClass("horizontal-wave-effect").addClass("vertical-wave-effect");
+            }
+            animationType = animType;
+        };
+        this.loadImages = function (img_array) {
+            if (img_array == undefined) {
+                for (var i = 0; i < grids_available_cell_ids.length; i++) {
+                    images.push({
+                        "id": i.toString(),
+                        "url": "https://unsplash.it/" + cell_size + "?image=" + i.toString()
+                    });
+                }
+            } else {
+                for (var i = 0; i < grids_available_cell_ids.length; i++) {
+                    images.push({
+                        "id": i.toString(),
+                        "url": img_array[i]
+                    });
+                }
             }
             last_image_id = i;
         };
@@ -242,7 +266,9 @@
             });
             $downloadingImage.attr("src", url);
         };
-        this.addNewImage = function (image_url) {
+        this.addNewImage = function (image_url, callback) {
+            if (callback == undefined)
+                throw new Error("This method cant use in synchronized mode!");
             var image = {
                 "id": last_image_id.toString(),
                 "url": null
@@ -262,13 +288,15 @@
                     }
                     images = _new_images;
                     last_image_id++;
+                    callback();
                 } else {
                     console.log("ERROR downloading image!");
                     return;
                 }
             });
         };
-        this.reloadGrid = function () {
+        this.initGridHtml = function () {
+            Grid.createDOMObjects();
             var img_counter = 0;
             for (var i = 0; i < Grid.cells.length; i++) {
                 var cell = Grid.cells[i];
@@ -282,19 +310,101 @@
                 }
             }
         };
+        this.prepareGridForAnimation = function () {
+            var img_counter = 0;
+            for (var i = 0; i < Grid.cells.length; i++) {
+                var cell = Grid.cells[i];
+                if (cell.is_available()) {
+                    //cell.get_Front_img().attr("src", images[img_counter].url);
+                    cell.get_Back_img().attr("src", images[img_counter].url);
+                    img_counter++;
+                } else {
+                    cell.get_Back_img().remove();
+                    cell.get_Front_img().remove();
+                }
+            }
+        };
+        this.stablizeGrid = function (callback) {
+            var img_counter = 0;
+            for (var i = 0; i < Grid.cells.length; i++) {
+                var cell = Grid.cells[i];
+                if (cell.is_available()) {
+                    cell.get_Front_img().attr("src", images[img_counter].url);
+                    cell.get_Back_img().attr("src", images[img_counter].url);
+                    //cell.get_Front_img().attr("src", cell.get_Back_img().attr("src"));
+                    cell.get_Animation_element().toggleClass(flip_class);
+                    img_counter++;
+                }
+            }
+            callback();
+        };
+        this.spinGrid = function (new_img_url, callback) {
+            var that = this;
+            this.addNewImage(new_img_url, function () {
+                that.prepareGridForAnimation();
+                callback()
+            });
+        };
+        this.animateGrid = function (callback) {
+            function animateCol(col_index) {
+                var col_cells = Grid.getCellsInSameColumn(col_index);
+                var _dom_elements = [];
+                for (var j in col_cells) {
+                    if (col_cells[j].is_available())
+                        _dom_elements.push(col_cells[j].get_Animation_element());
+                }
+                $(_dom_elements).toggleClass(flip_class).delay(1000).promise().done(function () {
+                    if (col_index + 1 < Grid.y) {
+                        animateCol(col_index + 1)
+                    } else {
+                        callback();
+                    }
+                });
+            }
 
+            function animateRow(row_index) {
+                var first_cell_of_this_row_index = (row_index * Grid.y);
+                var row_cells = Grid.getCellsInSameRow(first_cell_of_this_row_index);
+                var _dom_elements = [];
+                for (var j in row_cells) {
+                    if (row_cells[j].is_available()) {
+                        _dom_elements.push(row_cells[j].get_Animation_element());
+                    }
+                }
+                $(_dom_elements).toggleClass(flip_class).delay(1000).promise().done(function () {
+                    if (row_index + 1 < Grid.x) {
+                        animateRow(row_index + 1);
+                    } else {
+                        callback();
+                    }
+                });
+            }
+
+            if (animationType == "horizontal") {
+                animateRow(0);
+            } else {
+                animateCol(0);
+            }
+        }
     };
     var dom_helper = new DOMHelper();
     $.fn.extend({
-        MakeGrid: function (jSelector, x, y, available_cell_ids) {
+        MakeGrid: function (jSelector, x, y, animtype, available_cell_ids) {
             init(jSelector, x, y);
             decorate(available_cell_ids);
             dom_helper.loadImages();
+            dom_helper.initGridHtml();
+            dom_helper.setAnimation(animtype);
             return Grid;
         },
-        ReloadGrid: function () {
-            dom_helper.addNewImage();
-            dom_helper.reloadGrid();
+        AddNewImage: function (img_url, callback) {
+            dom_helper.spinGrid(img_url, function () {
+                dom_helper.animateGrid(function () {
+                    dom_helper.stablizeGrid(function () {
+                        callback();
+                    });
+                });
+            });
         }
     });
 })(jQuery);
